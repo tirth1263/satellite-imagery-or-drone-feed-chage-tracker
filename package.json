@@ -1,0 +1,24 @@
+{
+  "name": "satellite-imagery-or-drone-feed-chage-tracker",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "A futuristic geospatial change intelligence dashboard for satellite imagery and drone feed analysis.",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14"
+  }
+}
