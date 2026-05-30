@@ -5,16 +5,10 @@ import {
   CalendarDays,
   ChevronDown,
   CloudUpload,
-  Crosshair,
   DatabaseZap,
   Download,
-  Eye,
-  Gauge,
   Globe2,
-  Layers3,
-  MapPinned,
   Play,
-  Radar,
   RadioTower,
   Route,
   Satellite,
@@ -22,8 +16,6 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
-  Waves,
-  Zap,
 } from 'lucide-react';
 import './App.css';
 import { DetectionMap } from './components/DetectionMap';

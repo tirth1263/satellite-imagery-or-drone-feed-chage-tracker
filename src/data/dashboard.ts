@@ -3,7 +3,6 @@ import {
   CloudRain,
   DatabaseZap,
   Flame,
-  LandPlot,
   ScanSearch,
   ShieldAlert,
   Trees,
@@ -171,5 +170,3 @@ export const pipelineSteps = [
     copy: 'Export raster masks, GeoJSON zones, dashboard metrics, and a stakeholder summary.',
   },
 ];
-
-export const unusedDomainMarkers = [LandPlot];

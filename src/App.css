@@ -360,6 +360,10 @@
 }
 
 .tool-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-height: 36px;
   padding: 0 11px;
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -468,6 +472,27 @@
   display: grid;
   gap: 10px;
   width: min(360px, calc(100% - 36px));
+}
+
+.map-compass {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  gap: 8px;
+}
+
+.map-compass svg {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: #ecf7ff;
+  background: rgba(6, 8, 13, 0.66);
+  backdrop-filter: blur(14px);
 }
 
 .detection-label article {
