@@ -28,6 +28,12 @@ npm run dev
 
 Open the local URL printed by Vite.
 
+## Live Site
+
+```text
+https://tirth1263.github.io/satellite-imagery-or-drone-feed-chage-tracker/
+```
+
 ## Production Build
 
 ```bash
