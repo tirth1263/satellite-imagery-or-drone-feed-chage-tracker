@@ -2,7 +2,7 @@
 
 A futuristic geospatial intelligence dashboard for tracking land, water, and urban change across satellite imagery or drone feeds. The project combines a polished React UI with a Python computer-vision pipeline that can compare georeferenced raster scenes over time.
 
-![Orbital Change Tracker UI](public/assets/orbital-change-map.png)
+![Orbital Change Tracker dashboard](public/assets/dashboard-preview.png)
 
 ## Highlights
 
