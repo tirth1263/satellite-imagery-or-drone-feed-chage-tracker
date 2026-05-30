@@ -1,13 +1,17 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   Activity,
   Bell,
   BrainCircuit,
   CalendarDays,
   ChevronDown,
+  CheckCircle2,
   CloudUpload,
   DatabaseZap,
   Download,
   Globe2,
+  Loader2,
   Play,
   RadioTower,
   Route,
@@ -16,6 +20,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  X,
 } from 'lucide-react';
 import './App.css';
 import { DetectionMap } from './components/DetectionMap';
@@ -23,6 +28,14 @@ import { MetricCard } from './components/MetricCard';
 import { SignalChart } from './components/SignalChart';
 import { StatusPill } from './components/StatusPill';
 import {
+  alertFeed,
+  analysisPhases,
+  analyzedChangeSignals,
+  analyzedDetections,
+  analyzedInsightCards,
+  analyzedMissionMetrics,
+  analyzedModelStats,
+  analyzedTimeline,
   changeSignals,
   detections,
   insightCards,
@@ -33,7 +46,171 @@ import {
   timeline,
 } from './data/dashboard';
 
+const sourceOptions = ['Landsat 8 + Drone', 'Sentinel-2 MSI', 'Drone Orthomosaic'];
+
+const mapImageUrl = `${import.meta.env.BASE_URL}assets/orbital-change-map.png`;
+
+function formatClock(date: Date) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function App() {
+  const [layers, setLayers] = useState(layerToggles);
+  const [isAnalyzed, setIsAnalyzed] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('Ready to compare scene pair');
+  const [lastRun, setLastRun] = useState('Awaiting analysis');
+  const [lastSync, setLastSync] = useState('Not synced');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [selectedDetection, setSelectedDetection] = useState(detections[0].label);
+
+  const timers = useRef<number[]>([]);
+  const noticeTimer = useRef<number | null>(null);
+
+  const activeMetrics = isAnalyzed ? analyzedMissionMetrics : missionMetrics;
+  const activeDetections = isAnalyzed ? analyzedDetections : detections;
+  const activeSignals = isAnalyzed ? analyzedChangeSignals : changeSignals;
+  const activeModels = isAnalyzed ? analyzedModelStats : modelStats;
+  const activeTimeline = isAnalyzed ? analyzedTimeline : timeline;
+  const activeInsights = isAnalyzed ? analyzedInsightCards : insightCards;
+  const dataSource = sourceOptions[sourceIndex];
+  const activeLayerNames = useMemo(
+    () => layers.filter((layer) => layer.active).map((layer) => layer.label),
+    [layers],
+  );
+  const confidence = isRunning ? `${Math.max(progress, 12)}%` : isAnalyzed ? '98.1%' : '96.4%';
+
+  const heroStyle = {
+    '--orbital-map-url': `url("${mapImageUrl}")`,
+  } as CSSProperties;
+
+  const showNotice = (message: string) => {
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+    }
+    setNotice(message);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 3200);
+  };
+
+  const clearRunTimers = () => {
+    timers.current.forEach((timer) => window.clearTimeout(timer));
+    timers.current = [];
+  };
+
+  useEffect(() => {
+    return () => {
+      clearRunTimers();
+      if (noticeTimer.current) {
+        window.clearTimeout(noticeTimer.current);
+      }
+    };
+  }, []);
+
+  const runAnalysis = () => {
+    if (isRunning) {
+      return;
+    }
+
+    clearRunTimers();
+    setIsRunning(true);
+    setProgress(4);
+    setStatusMessage('Preparing geospatial analysis job');
+    showNotice('Analysis started: scanning latest scene pair');
+
+    analysisPhases.forEach((phase, index) => {
+      const timer = window.setTimeout(() => {
+        setProgress(phase.progress);
+        setStatusMessage(phase.label);
+
+        if (phase.progress === 100) {
+          setIsRunning(false);
+          setIsAnalyzed(true);
+          setLastRun(formatClock(new Date()));
+          setSelectedDetection(analyzedDetections[0].label);
+          showNotice('Analysis complete: change zones updated');
+        }
+      }, 650 * (index + 1));
+
+      timers.current.push(timer);
+    });
+  };
+
+  const syncImagery = () => {
+    if (isSyncing) {
+      return;
+    }
+
+    setIsSyncing(true);
+    setStatusMessage('Connecting to imagery catalog');
+    showNotice('Syncing public satellite and drone metadata');
+
+    const timer = window.setTimeout(() => {
+      const now = formatClock(new Date());
+      setIsSyncing(false);
+      setLastSync(now);
+      setStatusMessage('Latest imagery metadata loaded');
+      showNotice(`Imagery synced at ${now}`);
+    }, 1200);
+
+    timers.current.push(timer);
+  };
+
+  const cycleSource = () => {
+    setSourceIndex((current) => {
+      const next = (current + 1) % sourceOptions.length;
+      showNotice(`Source switched to ${sourceOptions[next]}`);
+      return next;
+    });
+  };
+
+  const toggleLayer = (label: string) => {
+    setLayers((currentLayers) =>
+      currentLayers.map((layer) =>
+        layer.label === label ? { ...layer, active: !layer.active } : layer,
+      ),
+    );
+  };
+
+  const exportReport = () => {
+    const report = {
+      project: 'Orbital Change Tracker',
+      generatedAt: new Date().toISOString(),
+      status: isAnalyzed ? 'analysis_complete' : 'baseline_snapshot',
+      region: 'Amazon Basin Delta',
+      source: dataSource,
+      confidence,
+      lastRun,
+      lastSync,
+      activeLayers: activeLayerNames,
+      metrics: activeMetrics,
+      changeSignals: activeSignals,
+      detections: activeDetections,
+      modelStats: activeModels,
+      timeline: activeTimeline,
+      nextSteps: [
+        'Validate high-priority polygons with field imagery.',
+        'Export GeoJSON zones to a GIS workspace.',
+        'Run the Python Rasterio/OpenCV pipeline on real GeoTIFF scene pairs.',
+      ],
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `orbital-change-report-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatusMessage('Report exported to JSON');
+    showNotice('Report downloaded');
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -54,17 +231,48 @@ function App() {
         </nav>
 
         <div className="top-actions">
-          <button className="icon-button" type="button" aria-label="Alerts" title="Alerts">
+          <button
+            className={`icon-button ${showAlerts ? 'is-active' : ''}`}
+            type="button"
+            aria-label="Alerts"
+            title="Alerts"
+            onClick={() => setShowAlerts((current) => !current)}
+          >
             <Bell size={18} />
           </button>
-          <button className="primary-action" type="button">
-            <CloudUpload size={18} />
-            Sync Imagery
+          <button className="primary-action" type="button" onClick={syncImagery} disabled={isSyncing}>
+            {isSyncing ? <Loader2 className="spin" size={18} /> : <CloudUpload size={18} />}
+            {isSyncing ? 'Syncing' : 'Sync Imagery'}
           </button>
         </div>
       </header>
 
-      <section className="hero-band" id="overview">
+      {showAlerts && (
+        <aside className="alert-drawer" aria-label="Active alert feed">
+          <div className="drawer-heading">
+            <div>
+              <span className="eyebrow">Alert Feed</span>
+              <h2>Priority Findings</h2>
+            </div>
+            <button className="icon-button" type="button" aria-label="Close alerts" onClick={() => setShowAlerts(false)}>
+              <X size={18} />
+            </button>
+          </div>
+          <div className="alert-list">
+            {alertFeed.map((alert) => (
+              <article className="alert-item" key={alert.title}>
+                <span className={`severity-dot ${alert.severity}`} />
+                <div>
+                  <strong>{alert.title}</strong>
+                  <small>{alert.detail}</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      <section className="hero-band" id="overview" style={heroStyle}>
         <div className="hero-copy">
           <StatusPill icon={RadioTower} label="Live orbital telemetry" tone="cyan" />
           <h1>Detect land, water, and urban change before it becomes invisible.</h1>
@@ -73,14 +281,30 @@ function App() {
             vegetation indices, and model-generated change masks across time.
           </p>
           <div className="hero-actions" aria-label="Mission actions">
-            <button className="primary-action large" type="button">
-              <Play size={19} />
-              Run Analysis
+            <button className="primary-action large" type="button" onClick={runAnalysis} disabled={isRunning}>
+              {isRunning ? <Loader2 className="spin" size={19} /> : <Play size={19} />}
+              {isRunning ? `Analyzing ${progress}%` : 'Run Analysis'}
             </button>
-            <button className="secondary-action large" type="button">
+            <button className="secondary-action large" type="button" onClick={exportReport}>
               <Download size={19} />
               Export Report
             </button>
+          </div>
+          <div className="analysis-status" aria-live="polite">
+            <div className="analysis-status-row">
+              <div>
+                <span className="eyebrow">Analysis Engine</span>
+                <strong>{statusMessage}</strong>
+              </div>
+              <span className="progress-value">{progress}%</span>
+            </div>
+            <div className="analysis-progress">
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            <div className="status-meta">
+              <span>Last sync: {lastSync}</span>
+              <span>Last run: {lastRun}</span>
+            </div>
           </div>
         </div>
 
@@ -90,13 +314,13 @@ function App() {
               <span className="eyebrow">Region</span>
               <strong>Amazon Basin Delta</strong>
             </div>
-            <button className="select-button" type="button">
-              Landsat 8 + Drone <ChevronDown size={16} />
+            <button className="select-button" type="button" onClick={cycleSource}>
+              {dataSource} <ChevronDown size={16} />
             </button>
           </div>
 
           <div className="mission-grid">
-            {missionMetrics.map((metric) => (
+            {activeMetrics.map((metric) => (
               <MetricCard key={metric.label} {...metric} />
             ))}
           </div>
@@ -104,13 +328,21 @@ function App() {
       </section>
 
       <section className="dashboard-grid" aria-label="Change intelligence dashboard">
-        <DetectionMap detections={detections} layers={layerToggles} />
+        <DetectionMap
+          activeLayers={activeLayerNames}
+          detections={activeDetections}
+          imageSrc={mapImageUrl}
+          layers={layers}
+          selectedDetection={selectedDetection}
+          onSelectDetection={setSelectedDetection}
+          onToggleLayer={toggleLayer}
+        />
 
         <aside className="command-stack" aria-label="Command stack">
           <section className="panel compact-panel">
             <div className="panel-heading">
               <StatusPill icon={ScanLine} label="Scene pair" tone="green" />
-              <span className="confidence">96.4%</span>
+              <span className="confidence">{confidence}</span>
             </div>
             <div className="date-pair">
               <span>
@@ -124,7 +356,7 @@ function App() {
               </span>
             </div>
             <div className="range-track" aria-label="Comparison range">
-              <span style={{ width: '74%' }} />
+              <span style={{ width: isAnalyzed ? '91%' : '74%' }} />
             </div>
           </section>
 
@@ -134,7 +366,7 @@ function App() {
               <Sparkles size={20} />
             </div>
             <div className="signal-list">
-              {changeSignals.map((signal) => (
+              {activeSignals.map((signal) => (
                 <article className={`signal-card ${signal.tone}`} key={signal.name}>
                   <div>
                     <span>{signal.name}</span>
@@ -152,7 +384,7 @@ function App() {
               <BrainCircuit size={20} />
             </div>
             <div className="model-stack" id="models">
-              {modelStats.map((model) => (
+              {activeModels.map((model) => (
                 <div className="model-row" key={model.name}>
                   <span>{model.name}</span>
                   <div className="model-meter">
@@ -172,11 +404,11 @@ function App() {
             <h2>Temporal Drift</h2>
             <Activity size={20} />
           </div>
-          <SignalChart timeline={timeline} />
+          <SignalChart timeline={activeTimeline} />
         </div>
 
         <div className="insight-cards">
-          {insightCards.map((card) => {
+          {activeInsights.map((card) => {
             const Icon = card.icon;
             return (
               <article className={`insight-card ${card.tone}`} key={card.title}>
@@ -213,6 +445,10 @@ function App() {
 
       <footer className="footer-strip">
         <span>
+          <CheckCircle2 size={17} />
+          Interactive run, sync, layer, and export controls
+        </span>
+        <span>
           <Globe2 size={17} />
           CRS-aware raster workflow
         </span>
@@ -225,6 +461,13 @@ function App() {
           Portfolio-ready GitHub project
         </span>
       </footer>
+
+      {notice && (
+        <div className="toast" role="status" aria-live="polite">
+          <CheckCircle2 size={18} />
+          {notice}
+        </div>
+      )}
     </main>
   );
 }

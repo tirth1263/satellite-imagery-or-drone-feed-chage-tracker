@@ -8,8 +8,58 @@ import {
   Trees,
   Waves,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-export const missionMetrics = [
+export type Severity = 'hot' | 'warn' | 'cool';
+export type SignalTone = 'red' | 'amber' | 'green';
+export type InsightTone = 'cyan' | 'green' | 'amber' | 'red';
+
+export type MissionMetric = {
+  label: string;
+  value: string;
+  detail: string;
+};
+
+export type LayerToggle = {
+  label: string;
+  active: boolean;
+};
+
+export type Detection = {
+  label: string;
+  detail: string;
+  severity: Severity;
+  x: number;
+  y: number;
+  score: string;
+};
+
+export type ChangeSignal = {
+  name: string;
+  value: string;
+  detail: string;
+  tone: SignalTone;
+};
+
+export type ModelStat = {
+  name: string;
+  score: number;
+};
+
+export type TimelineItem = {
+  month: string;
+  value: number;
+};
+
+export type InsightCard = {
+  icon: LucideIcon;
+  kicker: string;
+  title: string;
+  copy: string;
+  tone: InsightTone;
+};
+
+export const missionMetrics: MissionMetric[] = [
   {
     label: 'Area Scanned',
     value: '4,820 km2',
@@ -32,18 +82,41 @@ export const missionMetrics = [
   },
 ];
 
-export const layerToggles = [
+export const analyzedMissionMetrics: MissionMetric[] = [
+  {
+    label: 'Area Scanned',
+    value: '5,146 km2',
+    detail: '18 aligned raster tiles processed',
+  },
+  {
+    label: 'Change Mask',
+    value: '24.9%',
+    detail: 'Pixels above dynamic threshold',
+  },
+  {
+    label: 'Processing',
+    value: '2.8 min',
+    detail: 'Simulated GPU-assisted inference',
+  },
+  {
+    label: 'Alerts',
+    value: '34',
+    detail: '12 high-priority zones escalated',
+  },
+];
+
+export const layerToggles: LayerToggle[] = [
   { label: 'NDVI', active: true },
   { label: 'NDWI', active: true },
   { label: 'Urban', active: false },
   { label: 'Thermal', active: true },
 ];
 
-export const detections = [
+export const detections: Detection[] = [
   {
     label: 'Canopy loss',
     detail: 'Fragmented forest edge detected',
-    severity: 'hot' as const,
+    severity: 'hot',
     x: 64,
     y: 36,
     score: '91%',
@@ -51,7 +124,7 @@ export const detections = [
   {
     label: 'Reservoir shift',
     detail: 'Water boundary receded',
-    severity: 'warn' as const,
+    severity: 'warn',
     x: 42,
     y: 62,
     score: '84%',
@@ -59,7 +132,7 @@ export const detections = [
   {
     label: 'New settlement',
     detail: 'Road grid expansion found',
-    severity: 'cool' as const,
+    severity: 'cool',
     x: 73,
     y: 69,
     score: '78%',
@@ -67,14 +140,57 @@ export const detections = [
   {
     label: 'Burn scar',
     detail: 'Spectral anomaly expanded',
-    severity: 'hot' as const,
+    severity: 'hot',
     x: 31,
     y: 31,
     score: '88%',
   },
 ];
 
-export const changeSignals = [
+export const analyzedDetections: Detection[] = [
+  {
+    label: 'Illegal clearing surge',
+    detail: 'New exposed soil corridor crossed threshold',
+    severity: 'hot',
+    x: 58,
+    y: 30,
+    score: '97%',
+  },
+  {
+    label: 'Reservoir drawdown',
+    detail: 'Southern shoreline pulled back 420 m',
+    severity: 'warn',
+    x: 39,
+    y: 58,
+    score: '90%',
+  },
+  {
+    label: 'Road extension',
+    detail: 'Linear high-reflectance corridor appeared',
+    severity: 'cool',
+    x: 77,
+    y: 67,
+    score: '86%',
+  },
+  {
+    label: 'Thermal anomaly',
+    detail: 'Burn scar signature intensified after haze filter',
+    severity: 'hot',
+    x: 28,
+    y: 34,
+    score: '93%',
+  },
+  {
+    label: 'New roof cluster',
+    detail: 'YOLO pass found compact settlement growth',
+    severity: 'cool',
+    x: 69,
+    y: 48,
+    score: '82%',
+  },
+];
+
+export const changeSignals: ChangeSignal[] = [
   {
     name: 'Deforestation',
     value: '+12.8 km2',
@@ -95,14 +211,42 @@ export const changeSignals = [
   },
 ];
 
-export const modelStats = [
+export const analyzedChangeSignals: ChangeSignal[] = [
+  {
+    name: 'Deforestation',
+    value: '+18.6 km2',
+    detail: 'NDVI collapse clustered around 14 road-adjacent parcels',
+    tone: 'red',
+  },
+  {
+    name: 'Water Level',
+    value: '-12.1%',
+    detail: 'NDWI mask shows stronger contraction after cloud screening',
+    tone: 'amber',
+  },
+  {
+    name: 'Urban Sprawl',
+    value: '+21.4%',
+    detail: 'YOLO and RGB delta found 6 new structure clusters',
+    tone: 'green',
+  },
+];
+
+export const modelStats: ModelStat[] = [
   { name: 'U-Net Mask', score: 94 },
   { name: 'YOLO Objects', score: 87 },
   { name: 'NDVI Delta', score: 91 },
   { name: 'Cloud Filter', score: 96 },
 ];
 
-export const timeline = [
+export const analyzedModelStats: ModelStat[] = [
+  { name: 'U-Net Mask', score: 97 },
+  { name: 'YOLO Objects', score: 91 },
+  { name: 'NDVI Delta', score: 95 },
+  { name: 'Cloud Filter', score: 98 },
+];
+
+export const timeline: TimelineItem[] = [
   { month: 'Jun', value: 34 },
   { month: 'Jul', value: 42 },
   { month: 'Aug', value: 57 },
@@ -117,7 +261,22 @@ export const timeline = [
   { month: 'May', value: 79 },
 ];
 
-export const insightCards = [
+export const analyzedTimeline: TimelineItem[] = [
+  { month: 'Jun', value: 41 },
+  { month: 'Jul', value: 48 },
+  { month: 'Aug', value: 64 },
+  { month: 'Sep', value: 58 },
+  { month: 'Oct', value: 69 },
+  { month: 'Nov', value: 82 },
+  { month: 'Dec', value: 74 },
+  { month: 'Jan', value: 86 },
+  { month: 'Feb', value: 81 },
+  { month: 'Mar', value: 92 },
+  { month: 'Apr', value: 96 },
+  { month: 'May', value: 89 },
+];
+
+export const insightCards: InsightCard[] = [
   {
     icon: Trees,
     kicker: 'Vegetation',
@@ -148,6 +307,37 @@ export const insightCards = [
   },
 ];
 
+export const analyzedInsightCards: InsightCard[] = [
+  {
+    icon: Trees,
+    kicker: 'Vegetation',
+    title: 'Clearing accelerated',
+    copy: 'The newest run raised canopy-loss confidence and grouped adjacent parcels.',
+    tone: 'red',
+  },
+  {
+    icon: Waves,
+    kicker: 'Hydrology',
+    title: 'Water stress confirmed',
+    copy: 'NDWI and RGB deltas agree on a larger reservoir contraction zone.',
+    tone: 'cyan',
+  },
+  {
+    icon: ShieldAlert,
+    kicker: 'Risk',
+    title: '12 urgent zones',
+    copy: 'High-priority findings are ready for field validation and export.',
+    tone: 'amber',
+  },
+  {
+    icon: CloudRain,
+    kicker: 'Quality',
+    title: 'Scene quality strong',
+    copy: 'Cloud filter improved to 98%, reducing false positives across the pair.',
+    tone: 'green',
+  },
+];
+
 export const pipelineSteps = [
   {
     icon: DatabaseZap,
@@ -168,5 +358,32 @@ export const pipelineSteps = [
     icon: Flame,
     title: 'Report',
     copy: 'Export raster masks, GeoJSON zones, dashboard metrics, and a stakeholder summary.',
+  },
+];
+
+export const analysisPhases = [
+  { progress: 12, label: 'Authenticating imagery catalog' },
+  { progress: 28, label: 'Aligning CRS and raster footprints' },
+  { progress: 46, label: 'Computing NDVI and NDWI deltas' },
+  { progress: 63, label: 'Running U-Net semantic mask' },
+  { progress: 81, label: 'Scoring YOLO settlement detections' },
+  { progress: 100, label: 'Packaging change zones and report' },
+];
+
+export const alertFeed = [
+  {
+    title: 'Canopy loss anomaly',
+    detail: 'High-priority clearing zone detected near access road cluster.',
+    severity: 'hot' as Severity,
+  },
+  {
+    title: 'Reservoir boundary shift',
+    detail: 'Waterline retreat increased after current scene comparison.',
+    severity: 'warn' as Severity,
+  },
+  {
+    title: 'New settlement cluster',
+    detail: 'Object detector found compact roof signatures in the east grid.',
+    severity: 'cool' as Severity,
   },
 ];

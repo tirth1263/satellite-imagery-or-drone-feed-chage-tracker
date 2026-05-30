@@ -1,27 +1,31 @@
 import { Crosshair, Eye, Gauge, Layers3, MapPinned, Radar, Waves, Zap } from 'lucide-react';
-
-type Detection = {
-  label: string;
-  detail: string;
-  severity: 'hot' | 'warn' | 'cool';
-  x: number;
-  y: number;
-  score: string;
-};
-
-type LayerToggle = {
-  label: string;
-  active: boolean;
-};
+import type { Detection, LayerToggle } from '../data/dashboard';
 
 type DetectionMapProps = {
+  activeLayers: string[];
   detections: Detection[];
+  imageSrc: string;
   layers: LayerToggle[];
+  selectedDetection: string;
+  onSelectDetection: (label: string) => void;
+  onToggleLayer: (label: string) => void;
 };
 
 const layerIcons = [Layers3, Waves, Radar, Eye];
 
-export function DetectionMap({ detections, layers }: DetectionMapProps) {
+export function DetectionMap({
+  activeLayers,
+  detections,
+  imageSrc,
+  layers,
+  selectedDetection,
+  onSelectDetection,
+  onToggleLayer,
+}: DetectionMapProps) {
+  const activeLayerClass = activeLayers
+    .map((layer) => `layer-${layer.toLowerCase().replace(/\s+/g, '-')}`)
+    .join(' ');
+
   return (
     <section className="panel map-panel" aria-label="Satellite change map">
       <div className="map-toolbar">
@@ -37,6 +41,8 @@ export function DetectionMap({ detections, layers }: DetectionMapProps) {
                 className={`tool-toggle ${layer.active ? 'active' : ''}`}
                 key={layer.label}
                 type="button"
+                aria-pressed={layer.active}
+                onClick={() => onToggleLayer(layer.label)}
                 title={layer.label}
               >
                 <Icon size={15} />
@@ -47,28 +53,37 @@ export function DetectionMap({ detections, layers }: DetectionMapProps) {
         </div>
       </div>
 
-      <div className="map-viewport">
-        <img src="/assets/orbital-change-map.png" alt="Futuristic multispectral satellite map" />
+      <div className={`map-viewport ${activeLayerClass}`}>
+        <img src={imageSrc} alt="Futuristic multispectral satellite map" />
         <span className="scan-beam" aria-hidden="true" />
         {detections.map((detection) => (
-          <span
+          <button
             aria-label={`${detection.label}: ${detection.detail}`}
-            className={`detection-point ${detection.severity}`}
+            aria-pressed={selectedDetection === detection.label}
+            className={`detection-point ${detection.severity} ${
+              selectedDetection === detection.label ? 'selected' : ''
+            }`}
             key={detection.label}
+            onClick={() => onSelectDetection(detection.label)}
             style={{ left: `${detection.x}%`, top: `${detection.y}%` }}
             title={`${detection.label} - ${detection.score}`}
           />
         ))}
         <div className="detection-label">
-          {detections.slice(0, 3).map((detection) => (
-            <article key={detection.label}>
+          {detections.slice(0, 4).map((detection) => (
+            <button
+              className={selectedDetection === detection.label ? 'selected' : ''}
+              key={detection.label}
+              onClick={() => onSelectDetection(detection.label)}
+              type="button"
+            >
               <span className={`severity-dot ${detection.severity}`} />
               <div>
                 <strong>{detection.label}</strong>
                 <small>{detection.detail}</small>
               </div>
               <strong>{detection.score}</strong>
-            </article>
+            </button>
           ))}
         </div>
         <div className="map-compass" aria-hidden="true">
