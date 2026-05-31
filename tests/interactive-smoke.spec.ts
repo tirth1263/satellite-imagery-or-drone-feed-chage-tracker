@@ -11,9 +11,11 @@ test('dashboard controls respond', async ({ page }) => {
   await expect(page.getByRole('status')).toContainText(/Operational pipeline selected/i);
   await page.getByLabel('Orbital Change Tracker home').click();
 
-  await page.getByRole('button', { name: /landsat 8 \+ drone/i }).click();
+  await page.getByRole('button', { name: /^Landsat 8 \+ Drone$/ }).click();
   await page.getByRole('option', { name: /sentinel-2 msi/i }).click();
-  await expect(page.getByRole('status')).toContainText(/Sentinel-2 MSI/i);
+  await expect(page.getByRole('status')).toContainText(/Sahara Urban Edge loaded/i);
+  await page.getByRole('button', { name: /Alpine Reservoir Corridor/i }).click();
+  await expect(page.getByRole('status')).toContainText(/Alpine Reservoir Corridor loaded/i);
 
   await page.getByRole('button', { name: /run analysis/i }).click();
   await expect(page.getByRole('status')).toContainText(/analysis complete/i, { timeout: 8000 });

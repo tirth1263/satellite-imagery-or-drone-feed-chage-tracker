@@ -54,20 +54,7 @@ const navItems: { id: NavTarget; label: string; detail: string }[] = [
   { id: 'pipeline', label: 'Pipeline', detail: 'Operational pipeline selected' },
 ];
 
-const sourceOptions = [
-  {
-    label: 'Landsat 8 + Drone',
-    detail: '30 m public imagery paired with local drone frames.',
-  },
-  {
-    label: 'Sentinel-2 MSI',
-    detail: '10 m multispectral scene pair for vegetation and water change.',
-  },
-  {
-    label: 'Drone Orthomosaic',
-    detail: 'High-resolution orthomosaic mode for local inspection.',
-  },
-];
+const assetUrl = (filename: string) => `${import.meta.env.BASE_URL}assets/${filename}`;
 
 const modelDescriptions: Record<string, string> = {
   'U-Net Mask': 'Segments land-cover change into pixel-accurate change masks.',
@@ -83,7 +70,372 @@ const pipelineDetails: Record<string, string> = {
   Report: 'Report export creates a JSON artifact; GeoJSON export is available from the map toolbar.',
 };
 
-const mapImageUrl = `${import.meta.env.BASE_URL}assets/orbital-change-map.png`;
+const sourceOptions = [
+  {
+    label: 'Landsat 8 + Drone',
+    region: 'Amazon Basin Delta',
+    detail: '30 m public imagery paired with local drone frames.',
+    image: assetUrl('orbital-change-map.png'),
+    baselineMetrics: missionMetrics,
+    analyzedMetrics: analyzedMissionMetrics,
+    baselineDetections: detections,
+    analyzedDetections,
+    baselineSignals: changeSignals,
+    analyzedSignals: analyzedChangeSignals,
+    baselineModels: modelStats,
+    analyzedModels: analyzedModelStats,
+    baselineTimeline: timeline,
+    analyzedTimeline,
+  },
+  {
+    label: 'Sentinel-2 MSI',
+    region: 'Sahara Urban Edge',
+    detail: '10 m multispectral scene pair for desert-edge expansion.',
+    image: assetUrl('desert-urban-change-map.png'),
+    baselineMetrics: [
+      { label: 'Area Scanned', value: '2,930 km2', detail: '11 desert-edge tiles aligned' },
+      { label: 'Change Mask', value: '11.6%', detail: 'Urban and heat-risk pixels flagged' },
+      { label: 'Processing', value: '2.1 min', detail: 'Sentinel-2 multispectral pass' },
+      { label: 'Alerts', value: '18', detail: 'Expansion zones awaiting review' },
+    ],
+    analyzedMetrics: [
+      { label: 'Area Scanned', value: '3,240 km2', detail: '13 Sentinel-2 tiles processed' },
+      { label: 'Change Mask', value: '16.8%', detail: 'Construction and heat zones confirmed' },
+      { label: 'Processing', value: '1.9 min', detail: 'Optimized urban-sprawl inference' },
+      { label: 'Alerts', value: '29', detail: '9 high-priority expansion corridors' },
+    ],
+    baselineDetections: [
+      {
+        label: 'Construction bloom',
+        detail: 'New high-reflectance pads near ring road',
+        severity: 'hot' as const,
+        x: 68,
+        y: 45,
+        score: '89%',
+      },
+      {
+        label: 'Dry channel shift',
+        detail: 'Seasonal wash boundary migrated east',
+        severity: 'warn' as const,
+        x: 38,
+        y: 58,
+        score: '81%',
+      },
+      {
+        label: 'Solar farm growth',
+        detail: 'Panel grid expanded into desert parcel',
+        severity: 'cool' as const,
+        x: 54,
+        y: 32,
+        score: '76%',
+      },
+      {
+        label: 'Road corridor',
+        detail: 'Linear surface change along freight route',
+        severity: 'warn' as const,
+        x: 77,
+        y: 66,
+        score: '84%',
+      },
+    ],
+    analyzedDetections: [
+      {
+        label: 'Urban fringe surge',
+        detail: 'New construction cells doubled near ring road',
+        severity: 'hot' as const,
+        x: 70,
+        y: 43,
+        score: '96%',
+      },
+      {
+        label: 'Heat island growth',
+        detail: 'Thermal signature spread across industrial belt',
+        severity: 'hot' as const,
+        x: 60,
+        y: 61,
+        score: '92%',
+      },
+      {
+        label: 'Solar grid expansion',
+        detail: 'Object pass found panel array growth',
+        severity: 'cool' as const,
+        x: 49,
+        y: 29,
+        score: '88%',
+      },
+      {
+        label: 'Road extension',
+        detail: 'New arterial surface detected from RGB delta',
+        severity: 'warn' as const,
+        x: 82,
+        y: 68,
+        score: '90%',
+      },
+      {
+        label: 'Quarry scar',
+        detail: 'Bare-earth extraction zone expanded',
+        severity: 'warn' as const,
+        x: 33,
+        y: 47,
+        score: '85%',
+      },
+    ],
+    baselineSignals: [
+      {
+        name: 'Urban Sprawl',
+        value: '+9.4%',
+        detail: 'RGB delta highlights new roads and roof clusters',
+        tone: 'green' as const,
+      },
+      {
+        name: 'Surface Heat',
+        value: '+7.8%',
+        detail: 'Thermal layer intensified around industrial pads',
+        tone: 'red' as const,
+      },
+      {
+        name: 'Dry Wash',
+        value: '-3.1%',
+        detail: 'Water proxy decreased across seasonal channel',
+        tone: 'amber' as const,
+      },
+    ],
+    analyzedSignals: [
+      {
+        name: 'Urban Sprawl',
+        value: '+15.7%',
+        detail: 'YOLO found 11 new structure clusters near the fringe',
+        tone: 'green' as const,
+      },
+      {
+        name: 'Surface Heat',
+        value: '+13.9%',
+        detail: 'Thermal boost confirmed expanding heat island zones',
+        tone: 'red' as const,
+      },
+      {
+        name: 'Dry Wash',
+        value: '-6.4%',
+        detail: 'NDWI-like proxy shows stronger seasonal retreat',
+        tone: 'amber' as const,
+      },
+    ],
+    baselineModels: [
+      { name: 'U-Net Mask', score: 90 },
+      { name: 'YOLO Objects', score: 89 },
+      { name: 'NDVI Delta', score: 78 },
+      { name: 'Cloud Filter', score: 99 },
+    ],
+    analyzedModels: [
+      { name: 'U-Net Mask', score: 94 },
+      { name: 'YOLO Objects', score: 95 },
+      { name: 'NDVI Delta', score: 83 },
+      { name: 'Cloud Filter', score: 99 },
+    ],
+    baselineTimeline: [
+      { month: 'Jun', value: 22 },
+      { month: 'Jul', value: 29 },
+      { month: 'Aug', value: 35 },
+      { month: 'Sep', value: 38 },
+      { month: 'Oct', value: 42 },
+      { month: 'Nov', value: 47 },
+      { month: 'Dec', value: 51 },
+      { month: 'Jan', value: 56 },
+      { month: 'Feb', value: 62 },
+      { month: 'Mar', value: 68 },
+      { month: 'Apr', value: 71 },
+      { month: 'May', value: 74 },
+    ],
+    analyzedTimeline: [
+      { month: 'Jun', value: 28 },
+      { month: 'Jul', value: 36 },
+      { month: 'Aug', value: 44 },
+      { month: 'Sep', value: 51 },
+      { month: 'Oct', value: 57 },
+      { month: 'Nov', value: 63 },
+      { month: 'Dec', value: 69 },
+      { month: 'Jan', value: 74 },
+      { month: 'Feb', value: 80 },
+      { month: 'Mar', value: 86 },
+      { month: 'Apr', value: 91 },
+      { month: 'May', value: 94 },
+    ],
+  },
+  {
+    label: 'Drone Orthomosaic',
+    region: 'Alpine Reservoir Corridor',
+    detail: 'High-resolution orthomosaic mode for reservoir and slope inspection.',
+    image: assetUrl('alpine-reservoir-change-map.png'),
+    baselineMetrics: [
+      { label: 'Area Scanned', value: '684 km2', detail: 'Reservoir basin and valley tiles' },
+      { label: 'Change Mask', value: '14.2%', detail: 'Water edge and slope pixels flagged' },
+      { label: 'Processing', value: '4.4 min', detail: 'High-res orthomosaic analysis' },
+      { label: 'Alerts', value: '16', detail: 'Slope and shoreline findings' },
+    ],
+    analyzedMetrics: [
+      { label: 'Area Scanned', value: '812 km2', detail: 'Drone mosaic plus Sentinel context' },
+      { label: 'Change Mask', value: '19.5%', detail: 'Reservoir drawdown and slide zones confirmed' },
+      { label: 'Processing', value: '3.7 min', detail: 'Tiled high-resolution inference' },
+      { label: 'Alerts', value: '25', detail: '7 urgent water and slope zones' },
+    ],
+    baselineDetections: [
+      {
+        label: 'Reservoir edge',
+        detail: 'Shoreline receded along northern basin',
+        severity: 'warn' as const,
+        x: 45,
+        y: 48,
+        score: '86%',
+      },
+      {
+        label: 'Landslide scar',
+        detail: 'Fresh exposed slope below snow line',
+        severity: 'hot' as const,
+        x: 63,
+        y: 34,
+        score: '88%',
+      },
+      {
+        label: 'Village growth',
+        detail: 'Small roof cluster expanded near valley road',
+        severity: 'cool' as const,
+        x: 70,
+        y: 63,
+        score: '74%',
+      },
+      {
+        label: 'Snow retreat',
+        detail: 'Seasonal snow mask contracted upslope',
+        severity: 'warn' as const,
+        x: 30,
+        y: 26,
+        score: '82%',
+      },
+    ],
+    analyzedDetections: [
+      {
+        label: 'Reservoir drawdown',
+        detail: 'Waterline pulled back across west inlet',
+        severity: 'hot' as const,
+        x: 43,
+        y: 51,
+        score: '95%',
+      },
+      {
+        label: 'Active slide zone',
+        detail: 'Slope scar widened after snowmelt',
+        severity: 'hot' as const,
+        x: 61,
+        y: 31,
+        score: '94%',
+      },
+      {
+        label: 'Dam access route',
+        detail: 'New service road detected near spillway',
+        severity: 'cool' as const,
+        x: 75,
+        y: 56,
+        score: '83%',
+      },
+      {
+        label: 'Snowpack retreat',
+        detail: 'Glacier-edge mask shifted upslope',
+        severity: 'warn' as const,
+        x: 29,
+        y: 22,
+        score: '91%',
+      },
+      {
+        label: 'Sediment plume',
+        detail: 'Turbidity signature appeared near inlet',
+        severity: 'warn' as const,
+        x: 50,
+        y: 60,
+        score: '87%',
+      },
+    ],
+    baselineSignals: [
+      {
+        name: 'Water Level',
+        value: '-5.9%',
+        detail: 'Reservoir boundary contracted in two coves',
+        tone: 'amber' as const,
+      },
+      {
+        name: 'Slope Risk',
+        value: '+4.6 km2',
+        detail: 'Exposed-slope pixels increased below snow line',
+        tone: 'red' as const,
+      },
+      {
+        name: 'Settlement',
+        value: '+3.2%',
+        detail: 'Village footprint grew near service road',
+        tone: 'green' as const,
+      },
+    ],
+    analyzedSignals: [
+      {
+        name: 'Water Level',
+        value: '-10.8%',
+        detail: 'NDWI and drone mask agree on stronger drawdown',
+        tone: 'amber' as const,
+      },
+      {
+        name: 'Slope Risk',
+        value: '+8.1 km2',
+        detail: 'U-Net found new slide scars after snowmelt',
+        tone: 'red' as const,
+      },
+      {
+        name: 'Settlement',
+        value: '+5.6%',
+        detail: 'Object detector found new roofs near valley road',
+        tone: 'green' as const,
+      },
+    ],
+    baselineModels: [
+      { name: 'U-Net Mask', score: 92 },
+      { name: 'YOLO Objects', score: 84 },
+      { name: 'NDVI Delta', score: 88 },
+      { name: 'Cloud Filter', score: 93 },
+    ],
+    analyzedModels: [
+      { name: 'U-Net Mask', score: 96 },
+      { name: 'YOLO Objects', score: 89 },
+      { name: 'NDVI Delta', score: 92 },
+      { name: 'Cloud Filter', score: 95 },
+    ],
+    baselineTimeline: [
+      { month: 'Jun', value: 48 },
+      { month: 'Jul', value: 54 },
+      { month: 'Aug', value: 59 },
+      { month: 'Sep', value: 51 },
+      { month: 'Oct', value: 45 },
+      { month: 'Nov', value: 39 },
+      { month: 'Dec', value: 36 },
+      { month: 'Jan', value: 34 },
+      { month: 'Feb', value: 40 },
+      { month: 'Mar', value: 53 },
+      { month: 'Apr', value: 66 },
+      { month: 'May', value: 72 },
+    ],
+    analyzedTimeline: [
+      { month: 'Jun', value: 55 },
+      { month: 'Jul', value: 61 },
+      { month: 'Aug', value: 68 },
+      { month: 'Sep', value: 60 },
+      { month: 'Oct', value: 52 },
+      { month: 'Nov', value: 44 },
+      { month: 'Dec', value: 41 },
+      { month: 'Jan', value: 39 },
+      { month: 'Feb', value: 48 },
+      { month: 'Mar', value: 62 },
+      { month: 'Apr', value: 78 },
+      { month: 'May', value: 86 },
+    ],
+  },
+];
 
 function formatClock(date: Date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -127,13 +479,13 @@ function App() {
   const noticeTimer = useRef<number | null>(null);
   const focusTimer = useRef<number | null>(null);
 
-  const activeMetrics = isAnalyzed ? analyzedMissionMetrics : missionMetrics;
-  const activeDetections = isAnalyzed ? analyzedDetections : detections;
-  const activeSignals = isAnalyzed ? analyzedChangeSignals : changeSignals;
-  const activeModels = isAnalyzed ? analyzedModelStats : modelStats;
-  const activeTimeline = isAnalyzed ? analyzedTimeline : timeline;
-  const activeInsights = isAnalyzed ? analyzedInsightCards : insightCards;
   const dataSource = sourceOptions[sourceIndex];
+  const activeMetrics = isAnalyzed ? dataSource.analyzedMetrics : dataSource.baselineMetrics;
+  const activeDetections = isAnalyzed ? dataSource.analyzedDetections : dataSource.baselineDetections;
+  const activeSignals = isAnalyzed ? dataSource.analyzedSignals : dataSource.baselineSignals;
+  const activeModels = isAnalyzed ? dataSource.analyzedModels : dataSource.baselineModels;
+  const activeTimeline = isAnalyzed ? dataSource.analyzedTimeline : dataSource.baselineTimeline;
+  const activeInsights = isAnalyzed ? analyzedInsightCards : insightCards;
   const activeLayerNames = useMemo(
     () => layers.filter((layer) => layer.active).map((layer) => layer.label),
     [layers],
@@ -143,7 +495,7 @@ function App() {
   const selectedPipelineDetail = pipelineDetails[selectedPipeline] ?? pipelineDetails.Acquire;
 
   const heroStyle = {
-    '--orbital-map-url': `url("${mapImageUrl}")`,
+    '--orbital-map-url': `url("${dataSource.image}")`,
   } as CSSProperties;
 
   const showNotice = (message: string) => {
@@ -221,11 +573,11 @@ function App() {
           setIsRunning(false);
           setIsAnalyzed(true);
           setLastRun(formatClock(new Date()));
-          setSelectedDetection(analyzedDetections[0].label);
-          setSelectedSignal(analyzedChangeSignals[0].name);
-          setSelectedModel(analyzedModelStats[0].name);
+          setSelectedDetection(dataSource.analyzedDetections[0].label);
+          setSelectedSignal(dataSource.analyzedSignals[0].name);
+          setSelectedModel(dataSource.analyzedModels[0].name);
           setSelectedInsight(analyzedInsightCards[0].title);
-          setMapStatus('Analysis complete: five change zones are active.');
+          setMapStatus(`${dataSource.region} analysis complete: ${dataSource.analyzedDetections.length} change zones are active.`);
           showNotice('Analysis complete: change zones updated');
         }
       }, 650 * (index + 1));
@@ -255,10 +607,19 @@ function App() {
   };
 
   const selectSource = (index: number) => {
+    const nextSource = sourceOptions[index];
+    const nextDetections = isAnalyzed ? nextSource.analyzedDetections : nextSource.baselineDetections;
+    const nextSignals = isAnalyzed ? nextSource.analyzedSignals : nextSource.baselineSignals;
+    const nextModels = isAnalyzed ? nextSource.analyzedModels : nextSource.baselineModels;
+
     setSourceIndex(index);
     setShowSourceMenu(false);
-    setStatusMessage(`${sourceOptions[index].label} selected`);
-    showNotice(`Source switched to ${sourceOptions[index].label}`);
+    setSelectedDetection(nextDetections[0].label);
+    setSelectedSignal(nextSignals[0].name);
+    setSelectedModel(nextModels[0].name);
+    setMapStatus(`${nextSource.region} loaded with ${nextDetections.length} active findings.`);
+    setStatusMessage(`${nextSource.region} scene loaded`);
+    showNotice(`${nextSource.region} loaded`);
   };
 
   const toggleLayer = (label: string) => {
@@ -305,7 +666,7 @@ function App() {
       project: 'Orbital Change Tracker',
       generatedAt: new Date().toISOString(),
       status: isAnalyzed ? 'analysis_complete' : 'baseline_snapshot',
-      region: 'Amazon Basin Delta',
+      region: dataSource.region,
       source: dataSource.label,
       confidence,
       lastRun,
@@ -504,7 +865,7 @@ function App() {
             <div className="status-meta">
               <span>Last sync: {lastSync}</span>
               <span>Last run: {lastRun}</span>
-              <span>Source: {dataSource.label}</span>
+              <span>Scene: {dataSource.region}</span>
             </div>
           </div>
         </div>
@@ -517,7 +878,7 @@ function App() {
           <div className="console-header">
             <div>
               <span className="eyebrow">Region</span>
-              <strong>Amazon Basin Delta</strong>
+              <strong>{dataSource.region}</strong>
             </div>
             <div className="source-menu">
               <button
@@ -540,6 +901,7 @@ function App() {
                       type="button"
                       aria-selected={index === sourceIndex}
                     >
+                      <span>{source.region}</span>
                       <strong>{source.label}</strong>
                       <small>{source.detail}</small>
                     </button>
@@ -554,6 +916,23 @@ function App() {
               <MetricCard key={metric.label} {...metric} />
             ))}
           </div>
+
+          <div className="scene-switcher" aria-label="Scene gallery">
+            {sourceOptions.map((source, index) => (
+              <button
+                className={index === sourceIndex ? 'selected' : ''}
+                key={source.region}
+                onClick={() => selectSource(index)}
+                type="button"
+              >
+                <span className="scene-thumb" style={{ backgroundImage: `url("${source.image}")` }} />
+                <span>
+                  <strong>{source.region}</strong>
+                  <small>{source.label}</small>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -561,7 +940,7 @@ function App() {
         <DetectionMap
           activeLayers={activeLayerNames}
           detections={activeDetections}
-          imageSrc={mapImageUrl}
+          imageSrc={dataSource.image}
           layers={layers}
           mapStatus={mapStatus}
           selectedDetection={selectedDetection}

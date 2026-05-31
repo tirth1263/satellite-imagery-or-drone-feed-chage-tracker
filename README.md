@@ -8,6 +8,7 @@ A futuristic geospatial intelligence dashboard for tracking land, water, and urb
 
 - Futuristic multi-color dashboard built with React, TypeScript, Vite, and Lucide icons.
 - Interactive browser workflow for running a simulated analysis, syncing imagery, toggling map layers, viewing alerts, and exporting a JSON report.
+- Multi-region scenario switching for Amazon Basin, Sahara urban expansion, and Alpine reservoir monitoring, each with distinct metrics, detections, and map visuals.
 - Generated satellite-style hero asset committed inside the project.
 - Change-detection concepts for deforestation, reservoir movement, urban sprawl, and burn scars.
 - Python pipeline scaffold using Rasterio, OpenCV, NumPy, Shapely, and GeoJSON outputs.
